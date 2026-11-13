@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123c53">
+<title>Quiz découverte — Lignes2tram</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --navy: #123c53;
+    --teal: #126c74;
+    --paper: #ffffff;
+    --bg: #eef5f7;
+  }
+  body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    background: var(--bg);
+    color: #193747;
+    line-height: 1.6;
+  }
+  header {
+    padding: 28px 18px;
+    background: var(--navy);
+    color: white;
+    text-align: center;
+  }
+  h1 {
+    margin: 0 0 8px;
+    font-size: clamp(1.6rem, 5vw, 2.3rem);
+  }
+  header p { margin: 0; }
+  main {
+    width: min(100% - 28px, 700px);
+    margin: 22px auto;
+  }
+  .settings {
+    margin-bottom: 16px;
+    text-align: right;
+    font-size: .9rem;
+  }
+  .settings label { cursor: pointer; }
+  input[type="checkbox"] { width: 20px; height: 20px; vertical-align: middle; }
+  .panel {
+    background: var(--paper);
+    border: 1px solid #d3e1e7;
+    border-radius: 22px;
+    padding: clamp(22px, 5vw, 36px);
+    box-shadow: 0 10px 35px #123c5310;
+  }
+  h2 {
+    line-height: 1.4;
+    font-size: clamp(1.3rem, 4vw, 1.7rem);
+    margin-top: 0;
+  }
+  button, .link-button {
+    font: inherit;
+    font-weight: 650;
+    border-radius: 12px;
+    min-height: 50px;
+    padding: 13px 18px;
+    cursor: pointer;
+  }
+  button:focus-visible, a:focus-visible, input:focus-visible {
+    outline: 3px solid #c57400;
+    outline-offset: 4px;
+  }
+  .primary {
+    background: var(--teal);
+    color: white;
+    border: 0;
+    width: 100%;
+  }
+  .primary:hover { background: #0c555c; }
+  .primary:disabled { opacity: .5; cursor: default; }
+  .tag {
+    display: inline-block;
+    background: #e6f2f2;
+    color: #155d64;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: .85rem;
+    margin-bottom: 18px;
+  }
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: .95rem;
+    margin-bottom: 12px;
+  }
+  .track {
+    height: 10px;
+    background: #d7e4e9;
+    border-radius: 10px;
+    margin: 30px 0 28px;
+    position: relative;
+  }
+  .fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: var(--teal);
+    border-radius: inherit;
+    transition: width .5s ease;
+  }
+  .tram {
+    position: absolute;
+    top: -19px;
+    left: 0;
+    width: 42px;
+    height: 25px;
+    border-radius: 9px 9px 4px 4px;
+    background: var(--navy);
+    border-bottom: 4px solid #dbad51;
+    transition: left .5s ease;
+  }
+  .tram::before {
+    content: "";
+    position: absolute;
+    top: 5px;
+    left: 6px;
+    width: 30px;
+    height: 8px;
+    border-radius: 2px;
+    background: repeating-linear-gradient(
+      90deg, #d5eef4 0 7px, transparent 7px 10px
+    );
+  }
+  .answers {
+    display: grid;
+    gap: 12px;
+    margin: 22px 0;
+  }
+  .option {
+    width: 100%;
+    text-align: left;
+    background: white;
+    color: #193747;
+    border: 2px solid #ccdce3;
+    transition: transform .15s, background .15s;
+  }
+  .option:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: #f0f8f8;
+    border-color: var(--teal);
+  }
+  .option:disabled { cursor: default; opacity: 1; }
+  .option.correct {
+    background: #e6f5eb;
+    border-color: #227343;
+    color: #174c2c;
+  }
+  .option.incorrect {
+    background: #fff0e7;
+    border-color: #a65320;
+    color: #713616;
+  }
+  .feedback {
+    padding: 18px;
+    background: #f1f6f8;
+    border-radius: 14px;
+    margin: 18px 0;
+  }
+  .feedback h3 { font-size: 1.05rem; margin: 0 0 8px; }
+  .feedback p { margin: 0 0 12px; }
+  a { color: #08616b; text-underline-offset: 3px; }
+  .small { font-size: .88rem; }
+  .result-number {
+    font-size: 3.6rem;
+    font-weight: 800;
+    color: var(--teal);
+    text-align: center;
+    margin: 10px 0;
+  }
+  .discussion {
+    border-left: 4px solid var(--teal);
+    background: #edf7f5;
+    padding: 16px;
+    margin: 22px 0;
+  }
+  .discussion p { margin: 5px 0 0; }
+  .review-item {
+    border-top: 1px solid #d6e1e7;
+    padding: 15px 0;
+  }
+  .review-item p { margin: 5px 0; }
+  details { margin: 24px 0; }
+  summary { cursor: pointer; font-weight: 650; }
+  .back {
+    display: block;
+    text-align: center;
+    margin: 20px 0;
+  }
+  footer {
+    font-size: .85rem;
+    color: #4c626e;
+    text-align: center;
+    margin: 28px 0;
+  }
+  .enter { animation: enter .35s ease both; }
+  @keyframes enter {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .confetti {
+    position: fixed;
+    width: 8px;
+    height: 12px;
+    top: -20px;
+    pointer-events: none;
+    z-index: 10;
+    animation: fall 2.5s ease-in forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(105vh) rotate(600deg); opacity: 0; }
+  }
+  [hidden] { display: none !important; }
+  body.reduced *, body.reduced *::before, body.reduced *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lignes2tram : le quiz découverte</h1>
+  <p>10 questions pour découvrir le projet et en discuter.</p>
+</header>
+
+<main>
+  <div class="settings">
+    <label>
+      <input type="checkbox" id="reduceMotion">
+      Réduire les animations
+    </label>
+  </div>
+
+  <section id="welcome" class="panel enter">
+    <span class="tag">À votre rythme · Sans inscription</span>
+    <h2>Prêt à découvrir la future ligne 2 ?</h2>
+    <p>
+      Choisissez une réponse, découvrez son explication,
+      puis passez à la question suivante.
+      Il n’y a pas de chronomètre.
+    </p>
+    <p>
+      Ce quiz sert à ouvrir la discussion :
+      vous pouvez aussi poser vos questions au médiateur.
+    </p>
+    <button id="start" class="primary">Commencer le quiz</button>
+  </section>
+
+  <section id="game" class="panel" hidden
+           aria-labelledby="question">
+    <div class="meta">
+      <span id="counter"></span>
+      <span id="score"></span>
+    </div>
+
+    <div class="track" role="progressbar"
+         aria-label="Questions terminées"
+         aria-valuemin="0" aria-valuemax="10"
+         aria-valuenow="0" id="progress">
+      <div class="fill" id="fill"></div>
+      <span class="tram" id="tram" aria-hidden="true"></span>
+    </div>
+
+    <span class="tag" id="topic"></span>
+    <h2 id="question" tabindex="-1"></h2>
+    <div id="answers" class="answers"></div>
+
+    <div id="feedback" class="feedback"
+         role="status" aria-live="polite" hidden>
+      <h3 id="feedbackTitle"></h3>
+      <p id="explanation"></p>
+      <a id="source" target="_blank" rel="noopener noreferrer">
+        Source officielle (nouvel onglet)
+      </a>
+    </div>
+
+    <button id="next" class="primary" disabled>
+      Question suivante
+    </button>
+  </section>
+
+  <section id="result" class="panel" hidden
+           aria-labelledby="resultTitle">
+    <h2 id="resultTitle" tabindex="-1">Merci d’avoir participé !</h2>
+    <p id="finalScore" class="result-number"></p>
+    <p id="resultMessage"></p>
+
+    <div class="discussion">
+      <strong>Et vous, au quotidien ?</strong>
+      <p>
+        Quelle question aimeriez-vous poser sur le projet
+        ou sur les travaux près de chez vous ?
+        Échangeons avec le médiateur.
+      </p>
+    </div>
+
+    <details>
+      <summary>Revoir les réponses et les sources</summary>
+      <div id="review"></div>
+    </details>
+
+    <button id="restart" class="primary">Rejouer</button>
+  </section>
+
+  <a class="back" href="index.html">Découvrir aussi les flashcards</a>
+
+  <noscript>
+    <p>JavaScript doit être activé pour utiliser ce quiz.</p>
+  </noscript>
+
+  <footer>
+    <p>
+      Support de médiation indépendant, non officiel.
+      Informations issues du site Lignes2tram.
+      Les caractéristiques présentées sont celles du projet
+      et peuvent évoluer.
+    </p>
+    <p>
+      <a href="https://lignes2tram.fr/"
+         target="_blank" rel="noopener noreferrer">
+        Consulter le site officiel
+      </a>
+      · Version du quiz : novembre 2026.
+    </p>
+    <p>
+      Ce quiz ne demande aucune coordonnée.
+      Aucun outil d’analyse d’audience n’a été ajouté.
+      Les réponses ne sont pas envoyées par ce quiz à un serveur.
+    </p>
+  </footer>
+</main>
+
+<script>
+const base = "https://lignes2tram.fr/";
+const routeSource = base +
+  "wp-content/uploads/2026/05/L2T_240607_RP_Tours_support-presentation.pdf";
+const serviceSource = base +
+  "wp-content/uploads/2026/10/L2T_RP-Tours-Est_vFweb.pdf";
+const bikeSource = base +
+  "wp-content/uploads/2026/08/SE26000612_Depliant-ligne-2-de-tramway_MAJ-V3.pdf";
+const worksSource = base +
+  "wp-content/uploads/2026/09/IT_AV-REPUBLIQUE_PLATANE_PILAIN_CLT_VF.pdf";
+
+const questions = [
+  {
+    topic: "Le parcours",
+    question: "Quels sont les deux terminus communaux de la future ligne 2 ?",
+    options: [
+      "Tours et Saint-Pierre-des-Corps",
+      "La Riche et Chambray-lès-Tours",
+      "Saint-Cyr-sur-Loire et Fondettes"
+    ],
+    correct: 1,
+    explanation: "La future ligne reliera La Riche à Chambray-lès-Tours, en passant par Tours et Joué-lès-Tours.",
+    source: serviceSource
+  },
+  {
+    topic: "Le parcours",
+    question: "Quelle longueur est prévue pour la ligne 2 ?",
+    options: ["Environ 5 km", "Environ 25 km", "Environ 12,5 km"],
+    correct: 2,
+    explanation: "Le parcours prévu mesure 12,5 kilomètres.",
+    source: routeSource
+  },
+  {
+    topic: "Les stations",
+    question: "Combien de stations sont prévues sur la ligne ?",
+    options: ["22 stations", "12 stations", "32 stations"],
+    correct: 0,
+    explanation: "Le projet prévoit 22 stations, dont une station existante.",
+    source: routeSource
+  },
+  {
+    topic: "Le trajet",
+    question: "Quel temps de parcours est annoncé d’un terminus à l’autre ?",
+    options: ["Environ 15 minutes", "Environ 40 minutes", "Environ 90 minutes"],
+    correct: 1,
+    explanation: "Le temps annoncé est d’environ 40 minutes entre La Riche et Chambray-lès-Tours. Il s’agit d’une prévision.",
+    source: serviceSource
+  },
+  {
+    topic: "La fréquence",
+    question: "En heure de pointe, quelle fréquence est prévue ?",
+    options: [
+      "Un tramway toutes les 20 minutes",
+      "Un tramway toutes les 15 minutes",
+      "Un tramway toutes les 7 minutes"
+    ],
+    correct: 2,
+    explanation: "Un tramway toutes les 7 minutes est prévu en heure de pointe.",
+    source: serviceSource
+  },
+  {
+    topic: "La fréquence",
+    question: "Et en heure creuse, quelle fréquence est prévue ?",
+    options: [
+      "Un tramway toutes les 8 minutes",
+      "Un tramway toutes les 30 minutes",
+      "Un tramway toutes les 20 minutes"
+    ],
+    correct: 0,
+    explanation: "La fréquence annoncée est de 8 minutes en heure creuse.",
+    source: serviceSource
+  },
+  {
+    topic: "Les travaux",
+    question: "Que signifie « dévoiement des réseaux » ?",
+    options: [
+      "Changer uniquement les lignes de bus",
+      "Déplacer ou approfondir des réseaux souterrains",
+      "Installer les panneaux des stations"
+    ],
+    correct: 1,
+    explanation: "Certains réseaux souterrains doivent être déplacés ou approfondis pour libérer l’espace où sera installée la plateforme du tramway.",
+    source: worksSource
+  },
+  {
+    topic: "Les travaux",
+    question: "Quels réseaux peuvent être concernés par ces travaux ?",
+    options: [
+      "Uniquement les antennes de téléphonie",
+      "Uniquement l’éclairage des commerces",
+      "L’eau, l’électricité, le gaz et les télécommunications"
+    ],
+    correct: 2,
+    explanation: "Les documents de travaux citent notamment l’eau, l’électricité, le gaz et les télécommunications.",
+    source: worksSource
+  },
+  {
+    topic: "Le vélo",
+    question: "Combien d’abris vélos sécurisés sont prévus ?",
+    options: ["10 abris", "2 abris", "50 abris"],
+    correct: 0,
+    explanation: "Le projet prévoit 10 abris vélos sécurisés.",
+    source: bikeSource
+  },
+  {
+    topic: "Le vélo",
+    question: "Combien de places ces abris vélos totaliseront-ils ?",
+    options: ["25 places", "250 places", "2 500 places"],
+    correct: 1,
+    explanation: "Les 10 abris vélos sécurisés totaliseront 250 places.",
+    source: bikeSource
+  }
+];
+
+const $ = id => document.getElementById(id);
+let current = 0;
+let score = 0;
+let answered = false;
+let selections = [];
+
+const motionPreference =
+  window.matchMedia("(prefers-reduced-motion: reduce)");
+
+$("reduceMotion").checked = motionPreference.matches;
+document.body.classList.toggle("reduced", motionPreference.matches);
+
+$("reduceMotion").addEventListener("change", () => {
+  document.body.classList.toggle("reduced", $("reduceMotion").checked);
+  if ($("reduceMotion").checked) {
+    document.querySelectorAll(".confetti").forEach(el => el.remove());
+  }
+});
+
+function setProgress(count) {
+  const percent = count / questions.length * 100;
+  $("fill").style.width = percent + "%";
+  $("tram").style.left =
+    `calc(${percent}% - ${percent / 100 * 42}px)`;
+  $("progress").setAttribute("aria-valuenow", count);
+  $("progress").setAttribute(
+    "aria-valuetext",
+    `${count} question${count > 1 ? "s" : ""} terminée${count > 1 ? "s" : ""}`
+  );
+}
+
+function animatePanel(panel) {
+  panel.classList.remove("enter");
+  void panel.offsetWidth;
+  panel.classList.add("enter");
+}
+
+function showQuestion() {
+  answered = false;
+  const q = questions[current];
+
+  $("counter").textContent =
+    `Question ${current + 1} sur ${questions.length}`;
+  $("score").textContent = `Bonnes réponses : ${score}`;
+  $("topic").textContent = q.topic;
+  $("question").textContent = q.question;
+  $("answers").replaceChildren();
+  $("feedback").hidden = true;
+  $("next").disabled = true;
+  $("next").textContent =
+    current === questions.length - 1
+      ? "Voir mon résultat"
+      : "Question suivante";
+
+  q.options.forEach((text, index) => {
+    const button = document.createElement("button");
+    button.className = "option";
+    button.textContent = text;
+    button.addEventListener("click", () => selectAnswer(index));
+    $("answers").appendChild(button);
+  });
+
+  setProgress(current);
+  animatePanel($("game"));
+  $("question").focus();
+}
+
+function selectAnswer(selected) {
+  if (answered) return;
+  answered = true;
+  selections[current] = selected;
+
+  const q = questions[current];
+  const correct = selected === q.correct;
+
+  if (correct) score++;
+
+  Array.from($("answers").children).forEach((button, index) => {
+    button.disabled = true;
+    if (index === q.correct) {
+      button.classList.add("correct");
+      button.textContent += " — Bonne réponse";
+    } else if (index === selected) {
+      button.classList.add("incorrect");
+      button.textContent += " — Votre choix";
+    }
+  });
+
+  $("feedbackTitle").textContent =
+    correct ? "Bonne réponse !" : "Voici l’information à retenir";
+  $("explanation").textContent = q.explanation;
+  $("source").href = q.source;
+  $("feedback").hidden = false;
+  $("score").textContent = `Bonnes réponses : ${score}`;
+  $("next").disabled = false;
+  setProgress(current + 1);
+  animatePanel($("feedback"));
+}
+
+function celebrate() {
+  if ($("reduceMotion").checked || motionPreference.matches) return;
+  const colors = ["#126c74", "#123c53", "#dbad51", "#77b8c0"];
+  for (let i = 0; i < 30; i++) {
+    const piece = document.createElement("span");
+    piece.className = "confetti";
+    piece.setAttribute("aria-hidden", "true");
+    piece.style.left = Math.random() * 100 + "vw";
+    piece.style.background = colors[i % colors.length];
+    piece.style.animationDelay = Math.random() * .5 + "s";
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 3300);
+  }
+}
+
+function showResult() {
+  $("game").hidden = true;
+  $("result").hidden = false;
+  $("finalScore").textContent = `${score} / ${questions.length}`;
+
+  $("resultMessage").textContent =
+    score >= 8
+      ? "Vous connaissez déjà bien le projet ! Quelle information vous a le plus intéressé ?"
+      : score >= 5
+      ? "Vous avez découvert plusieurs points clés. Les réponses restent disponibles ci-dessous."
+      : "Merci d’avoir joué ! L’essentiel est de découvrir le projet et de pouvoir poser vos questions.";
+
+  $("review").replaceChildren();
+
+  questions.forEach((q, index) => {
+    const item = document.createElement("div");
+    item.className = "review-item";
+
+    const title = document.createElement("strong");
+    title.textContent = `${index + 1}. ${q.question}`;
+
+    const chosen = document.createElement("p");
+    chosen.textContent = `Votre choix : ${q.options[selections[index]]}`;
+
+    const explanation = document.createElement("p");
+    explanation.textContent = q.explanation;
+
+    const link = document.createElement("a");
+    link.href = q.source;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = "Source officielle (nouvel onglet)";
+
+    item.append(title, chosen, explanation, link);
+    $("review").appendChild(item);
+  });
+
+  animatePanel($("result"));
+  $("resultTitle").focus();
+  celebrate();
+}
+
+function start() {
+  current = 0;
+  score = 0;
+  selections = [];
+  document.querySelectorAll(".confetti").forEach(el => el.remove());
+  $("welcome").hidden = true;
+  $("result").hidden = true;
+  $("game").hidden = false;
+  showQuestion();
+}
+
+$("start").addEventListener("click", start);
+$("restart").addEventListener("click", start);
+
+$("next").addEventListener("click", () => {
+  if (!answered) return;
+  if (current < questions.length - 1) {
+    current++;
+    showQuestion();
+  } else {
+    showResult();
+  }
+});
+</script>
+</body>
+</html>
