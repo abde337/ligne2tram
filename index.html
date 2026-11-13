@@ -1,1 +1,399 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123c53">
+  <title>Lignes2tram — Les cartes découverte</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f0f5f7;
+      color: #183547;
+      font-family: system-ui, sans-serif;
+      line-height: 1.6;
+    }
+    header {
+      background: #123c53;
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      margin: 0 0 10px;
+    }
+    header p { margin: 0; }
+    main {
+      width: min(100% - 28px, 680px);
+      margin: 25px auto;
+    }
+    .intro { text-align: center; }
+    .status {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      font-weight: 650;
+      margin-top: 22px;
+    }
+    progress {
+      width: 100%;
+      height: 12px;
+      accent-color: #167d85;
+      margin: 10px 0 18px;
+    }
+    .card {
+      background: white;
+      border: 1px solid #d5e2e8;
+      border-radius: 20px;
+      padding: clamp(22px, 5vw, 36px);
+      box-shadow: 0 8px 28px #123c5310;
+    }
+    .label {
+      color: #17636a;
+      text-transform: uppercase;
+      font-size: .8rem;
+      font-weight: 750;
+      letter-spacing: .08em;
+    }
+    h2 {
+      font-size: clamp(1.3rem, 4vw, 1.7rem);
+      line-height: 1.4;
+      margin: 12px 0 24px;
+    }
+    .answer {
+      margin-top: 24px;
+      border-top: 2px solid #e7eff2;
+      padding-top: 18px;
+    }
+    .answer p { font-size: 1.08rem; }
+    .discussion {
+      background: #edf7f5;
+      border-left: 4px solid #167d85;
+      border-radius: 6px;
+      padding: 14px;
+      margin-top: 20px;
+    }
+    .discussion p { margin: 5px 0 0; }
+    button {
+      min-height: 48px;
+      padding: 12px 18px;
+      border: 0;
+      border-radius: 10px;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .primary {
+      width: 100%;
+      background: #126c74;
+      color: white;
+    }
+    .secondary {
+      background: white;
+      color: #123c53;
+      border: 1px solid #bdcfd7;
+    }
+    button:hover { filter: brightness(.95); }
+    button:disabled { opacity: .4; cursor: default; }
+    button:focus-visible, a:focus-visible {
+      outline: 3px solid #d88500;
+      outline-offset: 4px;
+    }
+    nav {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 18px 0 12px;
+    }
+    .tools {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+    a { color: #08616b; text-underline-offset: 3px; }
+    footer {
+      text-align: center;
+      font-size: .87rem;
+      color: #4b626f;
+      margin: 30px 0;
+    }
+    footer p { margin: 12px 0; }
+    [hidden] { display: none !important; }
+    @media (max-width: 380px) {
+      nav { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Lignes2tram : les cartes découverte</h1>
+    <p>Une question, une réponse, une occasion d’échanger.</p>
+  </header>
 
+  <main>
+    <p class="intro">
+      Découvrez le projet à votre rythme.
+      Réfléchissez à la question, puis affichez la réponse.
+      Aucun score : ici, on discute !
+    </p>
+
+    <div class="status">
+      <span id="counter" aria-live="polite"></span>
+      <span id="topic"></span>
+    </div>
+    <progress id="progress" max="15" value="1"
+              aria-label="Position dans les cartes"></progress>
+
+    <article class="card" aria-labelledby="question">
+      <span class="label">À votre avis ?</span>
+      <h2 id="question"></h2>
+
+      <button id="toggle" class="primary"
+              aria-expanded="false" aria-controls="answer">
+        Voir la réponse
+      </button>
+
+      <div id="answer" class="answer" hidden>
+        <span class="label">La réponse</span>
+        <p id="answerText"></p>
+        <a id="source" target="_blank" rel="noopener noreferrer">
+          Consulter la source officielle (nouvel onglet)
+        </a>
+
+        <div class="discussion">
+          <strong>Et vous ?</strong>
+          <p id="discussion"></p>
+        </div>
+      </div>
+    </article>
+
+    <nav aria-label="Navigation entre les cartes">
+      <button id="previous" class="secondary">← Précédente</button>
+      <button id="next" class="secondary">Suivante →</button>
+    </nav>
+
+    <div class="tools">
+      <button id="shuffle" class="secondary">Mélanger les cartes</button>
+      <button id="restart" class="secondary">Recommencer</button>
+    </div>
+
+    <noscript>
+      <p>Activez JavaScript pour utiliser les cartes interactives.</p>
+    </noscript>
+
+    <footer>
+      <p>
+        Support de médiation indépendant, non officiel.
+        Informations issues du site Lignes2tram.
+        Les prévisions et les conditions de réalisation peuvent évoluer.
+      </p>
+      <p>
+        Pour les informations actualisées :
+        <a href="https://lignes2tram.fr/"
+           target="_blank" rel="noopener noreferrer">
+          consulter le site officiel
+        </a>.
+      </p>
+      <p>
+        Version du support : novembre 2026.
+        Sans formulaire de coordonnées, sans outil d’analyse
+        d’audience ajouté par cette page.
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    const site = "https://lignes2tram.fr/";
+    const presentation =
+      site + "wp-content/uploads/2026/10/L2T_RP-Tours-Est_vFweb.pdf";
+    const plans =
+      site + "wp-content/uploads/2026/04/22813_RSECPR0350_L2T_Carnet_Plans_WEB_.pdf";
+    const parcours =
+      site + "wp-content/uploads/2026/05/L2T_240607_RP_Tours_support-presentation.pdf";
+    const travaux =
+      site + "wp-content/uploads/2026/09/IT_AV-REPUBLIQUE_PLATANE_PILAIN_CLT_VF.pdf";
+
+    const cards = [
+      {
+        topic: "Le parcours",
+        question: "Quelles communes la future ligne 2 reliera-t-elle ?",
+        answer: "La ligne reliera La Riche à Chambray-lès-Tours, en passant par Tours et Joué-lès-Tours.",
+        discussion: "Habitez-vous ou vous déplacez-vous dans l’une de ces communes ?",
+        source: presentation
+      },
+      {
+        topic: "Le parcours",
+        question: "La ligne mesurera-t-elle environ 5, 12,5 ou 25 kilomètres ?",
+        answer: "La longueur prévue est de 12,5 kilomètres.",
+        discussion: "Quel trajet aimeriez-vous pouvoir effectuer avec cette ligne ?",
+        source: parcours
+      },
+      {
+        topic: "Les stations",
+        question: "Combien de stations sont prévues : 12, 22 ou 32 ?",
+        answer: "Le projet prévoit 22 stations, dont une station existante.",
+        discussion: "Quelle destination aimeriez-vous rejoindre facilement ?",
+        source: parcours
+      },
+      {
+        topic: "Le trajet",
+        question: "Combien de temps faudra-t-il pour aller d’un terminus à l’autre ?",
+        answer: "Le temps de parcours annoncé est d’environ 40 minutes entre La Riche et Chambray-lès-Tours.",
+        discussion: "Comment effectuez-vous vos déplacements aujourd’hui ?",
+        source: presentation
+      },
+      {
+        topic: "La fréquence",
+        question: "En heure de pointe, un tramway est-il prévu toutes les 7, 15 ou 20 minutes ?",
+        answer: "La fréquence prévue est d’un tramway toutes les 7 minutes en heure de pointe.",
+        discussion: "Pour vous, qu’est-ce qui compte le plus : la fréquence ou le temps de trajet ?",
+        source: presentation
+      },
+      {
+        topic: "Les travaux",
+        question: "Que signifie « dévoiement des réseaux » ?",
+        answer: "Cela consiste à déplacer ou à approfondir les réseaux souterrains, comme l’eau, l’électricité, le gaz ou les télécommunications, pour libérer l’espace nécessaire à la plateforme du tramway.",
+        discussion: "Aviez-vous identifié à quoi servent les travaux près de chez vous ?",
+        source: travaux
+      },
+      {
+        topic: "Les travaux",
+        question: "Les travaux concernent-ils seulement les rails du tramway ?",
+        answer: "Non. Les documents de travaux présentent aussi des interventions sur les réseaux souterrains : eau, électricité, gaz et télécommunications.",
+        discussion: "Quel aspect du chantier aimeriez-vous mieux comprendre ?",
+        source: travaux
+      },
+      {
+        topic: "Le parcours",
+        question: "Où commencera le parcours à La Riche ?",
+        answer: "Le terminus prévu à La Riche est le Prieuré Saint-Cosme. La ligne rejoindra ensuite le centre-ville de Tours.",
+        discussion: "Connaissez-vous ce secteur de La Riche ?",
+        source: site + "la-riche/"
+      },
+      {
+        topic: "Les parkings-relais",
+        question: "Combien de parkings-relais sont prévus ?",
+        answer: "Quatre parkings-relais sont prévus pour accompagner la future ligne.",
+        discussion: "Vous arrive-t-il de combiner voiture et transports en commun ?",
+        source: plans
+      },
+      {
+        topic: "S’informer",
+        question: "Où retrouver les documents pour mieux comprendre le projet ?",
+        answer: "La médiathèque du site Lignes2tram rassemble des visuels, des tracés, des documents d’information et des supports de communication.",
+        discussion: "Quel type de document vous serait le plus utile ?",
+        source: site + "publications/"
+      },
+      {
+        topic: "À La Riche",
+        question: "Combien de stations sont prévues à La Riche ?",
+        answer: "Quatre stations sont prévues sur la commune de La Riche.",
+        discussion: "Quels lieux fréquentez-vous dans cette commune ?",
+        source: site + "la-riche/"
+      },
+      {
+        topic: "À Joué-lès-Tours",
+        question: "Par quel secteur la ligne rejoindra-t-elle Joué-lès-Tours ?",
+        answer: "Elle rejoindra Joué-lès-Tours au niveau du campus Grandmont, puis empruntera l’avenue de Bordeaux sur environ 600 mètres avant de rejoindre Chambray-lès-Tours.",
+        discussion: "Vous déplacez-vous dans le secteur de Grandmont ?",
+        source: site + "joue-les-tours/"
+      },
+      {
+        topic: "Le terminus sud",
+        question: "Quel nom porte le parking-relais situé au terminus sud ?",
+        answer: "Il s’agit du parking-relais Papoterie, à Chambray-lès-Tours.",
+        discussion: "Ce point de connexion pourrait-il vous être utile ?",
+        source: site + "joue-les-tours/"
+      },
+      {
+        topic: "Le vélo",
+        question: "Des abris vélos sécurisés sont-ils prévus ?",
+        answer: "Oui. Le projet prévoit 10 abris vélos sécurisés, totalisant 250 places.",
+        discussion: "Pourriez-vous venir à vélo jusqu’à une station ?",
+        source: plans
+      },
+      {
+        topic: "La fréquence",
+        question: "Quelle fréquence est prévue en heure creuse ?",
+        answer: "Un tramway toutes les 8 minutes est prévu en heure creuse, contre 7 minutes en heure de pointe.",
+        discussion: "À quels moments de la journée prenez-vous les transports ?",
+        source: presentation
+      }
+    ];
+
+    let order = cards.map((_, i) => i);
+    let position = 0;
+
+    const get = id => document.getElementById(id);
+    const toggle = get("toggle");
+    const answer = get("answer");
+
+    function render() {
+      const card = cards[order[position]];
+      get("counter").textContent =
+        `Carte ${position + 1} sur ${cards.length}`;
+      get("topic").textContent = card.topic;
+      get("progress").max = cards.length;
+      get("progress").value = position + 1;
+      get("question").textContent = card.question;
+      get("answerText").textContent = card.answer;
+      get("discussion").textContent = card.discussion;
+      get("source").href = card.source;
+
+      answer.hidden = true;
+      toggle.textContent = "Voir la réponse";
+      toggle.setAttribute("aria-expanded", "false");
+
+      get("previous").disabled = position === 0;
+      get("next").disabled = position === cards.length - 1;
+    }
+
+    toggle.addEventListener("click", () => {
+      answer.hidden = !answer.hidden;
+      const expanded = !answer.hidden;
+      toggle.setAttribute("aria-expanded", String(expanded));
+      toggle.textContent =
+        expanded ? "Masquer la réponse" : "Voir la réponse";
+    });
+
+    get("previous").addEventListener("click", () => {
+      if (position > 0) {
+        position--;
+        render();
+        toggle.focus();
+      }
+    });
+
+    get("next").addEventListener("click", () => {
+      if (position < cards.length - 1) {
+        position++;
+        render();
+        toggle.focus();
+      }
+    });
+
+    get("shuffle").addEventListener("click", () => {
+      for (let i = order.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [order[i], order[j]] = [order[j], order[i]];
+      }
+      position = 0;
+      render();
+      toggle.focus();
+    });
+
+    get("restart").addEventListener("click", () => {
+      order = cards.map((_, i) => i);
+      position = 0;
+      render();
+      toggle.focus();
+    });
+
+    render();
+  </script>
+</body>
+</html>
