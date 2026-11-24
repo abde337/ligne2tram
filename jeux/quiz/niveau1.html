@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz facile – Lignes2tram</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      margin: 0;
+      padding: 20px;
+      color: #1c2b3a;
+    }
+    .carte {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .badge {
+      display: inline-block;
+      background: #2e7d32;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .identifiant {
+      font-size: 14px;
+      color: #555;
+      margin-top: 8px;
+    }
+    .question {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+    button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 14px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      background: #e8eef5;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #d8e4f0;
+    }
+    .bonne {
+      background: #c8e6c9 !important;
+    }
+    .mauvaise {
+      background: #ffcdd2 !important;
+    }
+    .resultat {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    .son {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="carte">
+  <span class="badge">Niveau 1 – Facile</span>
+
+  <div class="identifiant">
+    L2T-QZ-001-NIVEAU1<br>
+    Version 1 – Vérifié le 23 novembre 2026<br>
+    Source : lignes2tram.fr
+  </div>
+
+  <div id="quiz"></div>
+
+  <div class="resultat" id="resultat"></div>
+
+  <label class="son">
+    <input type="checkbox" id="activerSon" checked>
+    Activer les sons
+  </label>
+</div>
+
+<script>
+const questions = [
+  {
+    question: "Combien de stations prévoit la ligne 2 de tramway ?",
+    reponses: ["22 stations", "12 stations", "30 stations"],
+    bonne: 0
+  },
+  {
+    question: "Quelle est la longueur prévue de la ligne 2 ?",
+    reponses: ["12,5 kilomètres", "5 kilomètres", "20 kilomètres"],
+    bonne: 0
+  },
+  {
+    question: "La ligne 2 relie-t-elle La Riche à Chambray-lès-Tours ?",
+    reponses: ["Oui", "Non", "Seulement le week-end"],
+    bonne: 0
+  },
+  {
+    question: "La ligne 2 passe-t-elle par Joué-lès-Tours ?",
+    reponses: ["Oui", "Non", "Seulement à l’arrêt du Lac"],
+    bonne: 0
+  },
+  {
+    question: "Combien de parkings-relais sont prévus pour le projet ?",
+    reponses: ["4", "2", "8"],
+    bonne: 0
+  },
+  {
+    question: "Le tramway permet-il de laisser sa voiture dans un parking-relais ?",
+    reponses: ["Oui", "Non", "Seulement la nuit"],
+    bonne: 0
+  },
+  {
+    question: "La ligne 2 commence-t-elle à La Riche, au terminus Prieuré-Saint-Cosme ?",
+    reponses: ["Oui", "Non", "Seulement en 2030"],
+    bonne: 0
+  },
+  {
+    question: "La ligne 2 dessert-elle le centre-ville de Tours ?",
+    reponses: ["Oui", "Non", "Seulement le samedi"],
+    bonne: 0
+  },
+  {
+    question: "Le projet prévoit-il aussi une ligne de BHNS, c’est-à-dire un bus à haut niveau de service ?",
+    reponses: ["Oui", "Non", "Seulement pour les touristes"],
+    bonne: 0
+  },
+  {
+    question: "Le tramway est-il un moyen de transport collectif ?",
+    reponses: ["Oui", "Non", "Seulement pour les salariés"],
+    bonne: 0
+  }
+];
+
+let numero = 0;
+let score = 0;
+const activerSon = document.getElementById("activerSon");
+
+function afficherQuestion() {
+  const q = questions[numero];
+  document.getElementById("quiz").innerHTML = `
+    <div class="question">Question ${numero + 1} sur ${questions.length}</div>
+    <div class="question">${q.question}</div>
+    ${q.reponses.map((r, i) =>
+      `<button onclick="verifier(${i}, this)">${r}</button>`
+    ).join("")}
+  `;
+}
+
+function verifier(reponse, bouton) {
+  const q = questions[numero];
+
+  if (reponse === q.bonne) {
+    bouton.classList.add("bonne");
+    score++;
+    if (activerSon.checked) jouerSonBonne();
+  } else {
+    bouton.classList.add("mauvaise");
+    if (activerSon.checked) jouerSonMauvaise();
+  }
+
+  setTimeout(() => {
+    numero++;
+    if (numero < questions.length) {
+      afficherQuestion();
+    } else {
+      afficherResultat();
+    }
+  }, 800);
+}
+
+function afficherResultat() {
+  document.getElementById("quiz").innerHTML = "";
+  document.getElementById("resultat").innerHTML =
+    `Bravo ! Tu as obtenu ${score} sur ${questions.length}.`;
+  if (activerSon.checked) jouerSonFin();
+}
+
+function jouerSonBonne() {
+  const son = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+  son.play();
+}
+
+function jouerSonMauvaise() {
+  const son = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+  son.play();
+}
+
+function jouerSonFin() {
+  const son = new Audio("https://actions.google.com/sounds/v1/cartoon/concert_tune_up.ogg");
+  son.play();
+}
+
+afficherQuestion();
+</script>
+
+</body>
+</html>
