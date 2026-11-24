@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carte du projet — L2T-CARTE-001</title>
+
+<style>
+  :root {
+    --bleu: #123c63;
+    --fond: #f1f5f9;
+    --bord: #cbd5e1;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: system-ui, Arial, sans-serif;
+    color: #172c40;
+    background: var(--fond);
+    line-height: 1.5;
+  }
+
+  header, main, footer {
+    max-width: 1100px;
+    margin: auto;
+    padding: 18px;
+  }
+
+  h1 { margin: 8px 0; font-size: clamp(1.5rem, 4vw, 2rem); }
+
+  .badge {
+    display: inline-block;
+    background: var(--bleu);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 24px;
+  }
+
+  .meta { font-size: .9rem; }
+
+  .notice, .panneau {
+    background: white;
+    border: 1px solid var(--bord);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .commandes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  button, .lien-bouton {
+    font: inherit;
+    min-height: 44px;
+    padding: 10px 14px;
+    border: 2px solid var(--bleu);
+    border-radius: 8px;
+    background: white;
+    color: var(--bleu);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  button:hover, .lien-bouton:hover {
+    background: #e5eff9;
+  }
+
+  button:focus-visible, a:focus-visible {
+    outline: 3px solid #bc5700;
+    outline-offset: 3px;
+  }
+
+  button[aria-pressed="true"] {
+    background: var(--bleu);
+    color: white;
+  }
+
+  button:disabled { opacity: .5; cursor: default; }
+
+  a { color: #114f87; }
+
+  #visionneuse {
+    background: white;
+    border: 1px solid var(--bord);
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  #fenetre {
+    height: min(70vh, 760px);
+    min-height: 340px;
+    overflow: auto;
+    background: #e2e8f0;
+    border: 1px solid var(--bord);
+    overscroll-behavior: contain;
+  }
+
+  #fenetre:focus-visible {
+    outline: 3px solid #bc5700;
+  }
+
+  canvas {
+    display: block;
+    margin: 0 auto;
+    background: white;
+  }
+
+  #visionneuse:fullscreen {
+    max-width: none;
+    border-radius: 0;
+    overflow: auto;
+  }
+
+  #visionneuse:fullscreen #fenetre {
+    height: calc(100vh - 160px);
+  }
+
+  #etat { min-height: 1.5em; }
+
+  .themes { margin-top: 20px; }
+
+  #titre-info { margin-top: 0; }
+
+  footer {
+    font-size: .9rem;
+    padding-bottom: 30px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+
+<body>
+<header>
+  <span class="badge">Explorer le tracé</span>
+  <h1>La future ligne 2 de tramway</h1>
+  <p class="meta">
+    L2T-CARTE-001 · Version 1.0<br>
+    Informations vérifiées le 24 novembre 2026.<br>
+    Plan utilisé : document officiel publié en juin 2025.
+  </p>
+</header>
+
+<main>
+  <div class="notice">
+    Support de médiation non officiel.
+    Le plan conserve sa légende d’origine.
+    Les stations ne sont pas cliquables dans cette version.
+    Pour les évolutions du projet et les conditions de circulation,
+    consultez le site officiel.
+  </div>
+
+  <section id="visionneuse" aria-label="Plan officiel de la ligne 2">
+    <div class="commandes" aria-label="Commandes de la carte">
+      <button id="moins" type="button" disabled
+        aria-label="Réduire la carte">− Réduire</button>
+      <button id="plus" type="button" disabled
+        aria-label="Agrandir la carte">+ Agrandir</button>
+      <button id="ajuster" type="button" disabled>Ajuster</button>
+      <button id="plein-ecran" type="button">Plein écran</button>
+    </div>
+
+    <p id="etat" role="status" aria-live="polite">
+      Chargement du plan officiel…
+    </p>
+
+    <div id="fenetre" tabindex="0"
+      aria-label="Carte à faire défiler horizontalement et verticalement">
+      <canvas id="plan" role="img"
+        aria-label="Plan officiel de la future ligne 2 de tramway et de ses correspondances">
+      </canvas>
+    </div>
+
+    <p>
+      Agrandissez le plan, puis faites-le défiler avec le doigt,
+      la souris ou les touches fléchées.
+    </p>
+
+    <a class="lien-bouton"
+      href="https://lignes2tram.fr/wp-content/uploads/2025/06/L2T_carto-ligne-2.pdf"
+      target="_blank" rel="noopener noreferrer">
+      Ouvrir le plan officiel en PDF
+    </a>
+  </section>
+
+  <section class="themes" aria-labelledby="titre-themes">
+    <h2 id="titre-themes">Comprendre le projet</h2>
+    <p>Choisissez un thème pour afficher une explication.</p>
+
+    <div class="commandes" aria-label="Thèmes">
+      <button type="button" data-theme="trace"
+        aria-pressed="true" aria-controls="informations">
+        Le tracé
+      </button>
+      <button type="button" data-theme="correspondances"
+        aria-pressed="false" aria-controls="informations">
+        Les correspondances
+      </button>
+      <button type="button" data-theme="parkings"
+        aria-pressed="false" aria-controls="informations">
+        Les parkings-relais
+      </button>
+      <button type="button" data-theme="equipements"
+        aria-pressed="false" aria-controls="informations">
+        Les lieux desservis
+      </button>
+    </div>
+
+    <div id="informations" class="panneau"
+      aria-live="polite" aria-atomic="true">
+      <h3 id="titre-info"></h3>
+      <p id="texte-info"></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>
+    Sources :
+    <a
+      href="https://lignes2tram.fr/wp-content/uploads/2025/06/L2T_carto-ligne-2.pdf"
+      target="_blank" rel="noopener noreferrer">
+      plan officiel de la ligne 2
+    </a>
+    et
+    <a
+      href="https://lignes2tram.fr/les-nouvelles-lignes/la-ligne-2-de-tramway/"
+      target="_blank" rel="noopener noreferrer">
+      présentation officielle du projet
+    </a>.
+  </p>
+  <p>
+    Aucun temps de trajet personnalisé ni itinéraire de déviation
+    n’est calculé par cette page.
+  </p>
+</footer>
+
+<script type="module">
+const themes = {
+  trace: {
+    titre: "Quatre communes reliées",
+    texte:
+      "La ligne 2 reliera La Riche à Chambray-lès-Tours, " +
+      "en passant par Tours et Joué-lès-Tours. " +
+      "Le projet prévoit 12,5 kilomètres de ligne et 22 stations."
+  },
+  correspondances: {
+    titre: "Des connexions avec la ligne A",
+    texte:
+      "Deux correspondances avec la ligne A sont prévues : " +
+      "au pôle Liberté-Charcot et à la station Verdun."
+  },
+  parkings: {
+    titre: "Combiner voiture et tramway",
+    texte:
+      "Plus de 1 000 places sont prévues au total dans quatre " +
+      "parkings-relais le long de la ligne. Les deux terminus " +
+      "seront connectés à de nouveaux parkings-relais."
+  },
+  equipements: {
+    titre: "Des lieux importants du quotidien",
+    texte:
+      "La ligne desservira notamment les hôpitaux Bretonneau " +
+      "et Trousseau, le site universitaire de Grandmont " +
+      "et le centre aquatique du Lac."
+  }
+};
+
+function afficherTheme(cle) {
+  const theme = themes[cle];
+  document.getElementById("titre-info").textContent = theme.titre;
+  document.getElementById("texte-info").textContent = theme.texte;
+
+  document.querySelectorAll("[data-theme]").forEach(bouton => {
+    bouton.setAttribute(
+      "aria-pressed",
+      String(bouton.dataset.theme === cle)
+    );
+  });
+}
+
+document.querySelectorAll("[data-theme]").forEach(bouton => {
+  bouton.addEventListener("click", () => {
+    afficherTheme(bouton.dataset.theme);
+  });
+});
+
+afficherTheme("trace");
+
+const visionneuse = document.getElementById("visionneuse");
+const pleinEcran = document.getElementById("plein-ecran");
+
+if (!document.fullscreenEnabled) {
+  pleinEcran.hidden = true;
+} else {
+  pleinEcran.addEventListener("click", async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await visionneuse.requestFullscreen();
+      }
+    } catch {
+      document.getElementById("etat").textContent =
+        "Le plein écran n’est pas disponible. Utilisez le zoom.";
+    }
+  });
+
+  document.addEventListener("fullscreenchange", () => {
+    pleinEcran.textContent = document.fullscreenElement
+      ? "Quitter le plein écran"
+      : "Plein écran";
+  });
+}
+
+const etat = document.getElementById("etat");
+const fenetre = document.getElementById("fenetre");
+const canvas = document.getElementById("plan");
+const plus = document.getElementById("plus");
+const moins = document.getElementById("moins");
+const ajuster = document.getElementById("ajuster");
+
+let pagePDF;
+let zoom = 1;
+let renduEnCours = false;
+
+function reglerCommandes() {
+  plus.disabled = renduEnCours || !pagePDF || zoom >= 4;
+  moins.disabled = renduEnCours || !pagePDF || zoom <= 0.5;
+  ajuster.disabled = renduEnCours || !pagePDF;
+}
+
+async function dessiner() {
+  if (!pagePDF || renduEnCours) return;
+
+  renduEnCours = true;
+  reglerCommandes();
+  etat.textContent = "Affichage du plan…";
+
+  try {
+    const original = pagePDF.getViewport({ scale: 1 });
+    const largeurDisponible = Math.max(240, fenetre.clientWidth - 4);
+    const echelle = largeurDisponible / original.width * zoom;
+    const vue = pagePDF.getViewport({ scale: echelle });
+    const densite = Math.min(window.devicePixelRatio || 1, 2);
+
+    canvas.width = Math.ceil(vue.width * densite);
+    canvas.height = Math.ceil(vue.height * densite);
+    canvas.style.width = `${vue.width}px`;
+    canvas.style.height = `${vue.height}px`;
+
+    await pagePDF.render({
+      canvasContext: canvas.getContext("2d"),
+      viewport: vue,
+      transform: [densite, 0, 0, densite, 0, 0]
+    }).promise;
+
+    etat.textContent =
+      `Plan affiché — zoom ${Math.round(zoom * 100)} %.`;
+  } catch {
+    etat.textContent =
+      "Impossible d’afficher le plan ici. Ouvrez le PDF avec le lien ci-dessous.";
+  } finally {
+    renduEnCours = false;
+    reglerCommandes();
+  }
+}
+
+plus.addEventListener("click", () => {
+  zoom = Math.min(4, zoom + 0.5);
+  dessiner();
+});
+
+moins.addEventListener("click", () => {
+  zoom = Math.max(0.5, zoom - 0.5);
+  dessiner();
+});
+
+ajuster.addEventListener("click", () => {
+  zoom = 1;
+  fenetre.scrollTo(0, 0);
+  dessiner();
+});
+
+try {
+  const pdfjs = await import(
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs"
+  );
+
+  pdfjs.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs";
+
+  // Copiez le PDF officiel dans ce dossier sous le nom plan-officiel.pdf.
+  const documentPDF = await pdfjs.getDocument({
+    url: "./plan-officiel.pdf"
+  }).promise;
+
+  pagePDF = await documentPDF.getPage(1);
+  await dessiner();
+} catch {
+  etat.textContent =
+    "Le plan n’a pas pu être chargé. Vérifiez que plan-officiel.pdf " +
+    "se trouve dans ce dossier, ou ouvrez le PDF officiel ci-dessous.";
+}
+</script>
+</body>
+</html>
